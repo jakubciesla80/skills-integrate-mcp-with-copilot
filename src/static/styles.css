@@ -231,11 +231,14 @@ button:disabled {
   position: fixed;
   inset: 0;
   background-color: rgba(10, 15, 30, 0.55);
+  padding: 16px;
+  z-index: 999;
+}
+
+.modal:not(.hidden) {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 16px;
-  z-index: 999;
 }
 
 .modal-content {
