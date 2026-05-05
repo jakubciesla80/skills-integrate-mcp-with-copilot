@@ -52,12 +52,81 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  let lastFocusedElement = null;
+  const modalFocusableSelector =
+    'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+  function getModalFocusableElements() {
+    return Array.from(loginModal.querySelectorAll(modalFocusableSelector)).filter(
+      (element) => !element.classList.contains("hidden")
+    );
+  }
+
+  function handleLoginModalKeydown(event) {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeLoginModal();
+      return;
+    }
+
+    if (event.key !== "Tab") {
+      return;
+    }
+
+    const focusableElements = getModalFocusableElements();
+    if (focusableElements.length === 0) {
+      event.preventDefault();
+      loginModal.focus();
+      return;
+    }
+
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+    const activeElement = document.activeElement;
+
+    if (event.shiftKey) {
+      if (activeElement === firstElement || activeElement === loginModal) {
+        event.preventDefault();
+        lastElement.focus();
+      }
+      return;
+    }
+
+    if (activeElement === lastElement) {
+      event.preventDefault();
+      firstElement.focus();
+    }
+  }
+
   function openLoginModal() {
+    lastFocusedElement = document.activeElement;
     loginModal.classList.remove("hidden");
+    loginModal.setAttribute("aria-hidden", "false");
+    if (!loginModal.hasAttribute("tabindex")) {
+      loginModal.setAttribute("tabindex", "-1");
+    }
+    loginModal.addEventListener("keydown", handleLoginModalKeydown);
+
+    const focusableElements = getModalFocusableElements();
+    if (teacherUsernameInput && !teacherUsernameInput.disabled) {
+      teacherUsernameInput.focus();
+    } else if (focusableElements.length > 0) {
+      focusableElements[0].focus();
+    } else {
+      loginModal.focus();
+    }
   }
 
   function closeLoginModal() {
     loginModal.classList.add("hidden");
+    loginModal.setAttribute("aria-hidden", "true");
+    loginModal.removeEventListener("keydown", handleLoginModalKeydown);
+
+    if (lastFocusedElement && typeof lastFocusedElement.focus === "function") {
+      lastFocusedElement.focus();
+    } else if (userMenuBtn) {
+      userMenuBtn.focus();
+    }
   }
 
   // Function to fetch activities from API
